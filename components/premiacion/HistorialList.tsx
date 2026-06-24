@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { deleteGanador } from '@/lib/premiacion/actions'
 import type { Ganador } from '@/lib/premiacion/types'
+import { getPrizeImageSrc } from '@/lib/premiacion/prize-images'
 
 function formatDate(iso: string) {
   const d = new Date(iso)
@@ -38,7 +39,12 @@ export function HistorialList({ ganadores }: Props) {
             className="group flex items-center gap-3 py-3"
             style={{ opacity: isPending ? 0.6 : 1 }}
           >
-            <span className="text-xl select-none w-8 text-center shrink-0">{g.premio_emoji}</span>
+            {(() => {
+              const src = getPrizeImageSrc(g.premio_nombre)
+              return src
+                ? <img src={src} alt={g.premio_nombre} className="w-7 h-7 object-contain shrink-0" />
+                : <span className="text-xl select-none w-8 text-center shrink-0">{g.premio_emoji}</span>
+            })()}
             <div className="flex-1 min-w-0">
               {g.participante_nombre && (
                 <p className="text-white font-medium text-sm leading-tight truncate">{g.participante_nombre}</p>

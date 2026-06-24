@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { WheelPage } from './WheelCanvas'
 import type { PremioSlim, SorteoResult } from '@/lib/premiacion/types'
+import { getPrizeImageSrc } from '@/lib/premiacion/prize-images'
 
 const STORAGE_KEY = 'sorteo-cumple-participacion'
 const RESET_TOKEN = 'Lucre45'
@@ -22,7 +23,12 @@ function YaParticipoScreen({ record }: { record: ParticipacionRecord }) {
 
         {record.premio ? (
           <>
-            <div className="text-7xl select-none animate-bounce">{record.premio.emoji}</div>
+            {(() => {
+              const src = getPrizeImageSrc(record.premio.nombre)
+              return src
+                ? <img src={src} alt={record.premio.nombre} className="w-24 h-24 object-contain animate-bounce select-none" />
+                : <div className="text-7xl select-none animate-bounce">{record.premio.emoji}</div>
+            })()}
             <div>
               <p className="text-[#C9A84C] font-semibold text-xs uppercase tracking-widest mb-1">
                 ¡Ya participaste!

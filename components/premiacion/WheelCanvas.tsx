@@ -19,6 +19,25 @@ const OUTER_R = 170   // radio exterior de los segmentos
 const HUB_R   = 22    // radio del centro (hub)
 
 import type { PremioSlim } from '@/lib/premiacion/types'
+import { getPrizeImageSrc } from '@/lib/premiacion/prize-images'
+
+// ── Cache de imágenes para el canvas ─────────────────────────────────────────
+const imgCache = new Map<string, HTMLImageElement>()
+
+function preloadPrizeImages(premios: PremioSlim[], onAllLoaded: () => void) {
+  let pending = 0
+  premios.forEach(p => {
+    const src = getPrizeImageSrc(p.nombre)
+    if (src && !imgCache.has(src)) {
+      pending++
+      const img = new Image()
+      img.onload  = () => { imgCache.set(src, img); if (--pending === 0) onAllLoaded() }
+      img.onerror = () => {                          if (--pending === 0) onAllLoaded() }
+      img.src = src
+    }
+  })
+  if (pending === 0) onAllLoaded()
+}
 
 type GameState = 'idle' | 'fetching' | 'spinning' | 'won' | 'sin_stock'
 
@@ -98,9 +117,16 @@ function renderWheel(
     const lineH  = fontSize + 3
     const nombre = clampText(premios[i].nombre, maxChars)
 
-    // Emoji (más hacia el exterior)
-    ctx.font = `${fontSize + 1}px Inter, system-ui`
-    ctx.fillText(premios[i].emoji, 0, -lineH / 2)
+    // Ícono (imagen PNG o emoji de fallback)
+    const imgSrc = getPrizeImageSrc(premios[i].nombre)
+    const cachedImg = imgSrc ? imgCache.get(imgSrc) : undefined
+    if (cachedImg) {
+      const sz = fontSize + 8
+      ctx.drawImage(cachedImg, -sz / 2, -lineH / 2 - sz / 2, sz, sz)
+    } else {
+      ctx.font = `${fontSize + 1}px Inter, system-ui`
+      ctx.fillText(premios[i].emoji, 0, -lineH / 2)
+    }
 
     // Nombre (más hacia el centro)
     ctx.font = `bold ${fontSize}px Inter, system-ui`
@@ -171,6 +197,11 @@ export function WheelPage({ premios, participanteName, onGanador }: WheelPagePro
     if (!ctx) return
     renderWheel(ctx, premios, rotRef.current)
   }, [premios])
+
+  // Pre-cargar imágenes de premios y redibujar cuando estén listas
+  useEffect(() => {
+    preloadPrizeImages(premios, draw)
+  }, [premios, draw])
 
   useEffect(() => { draw() }, [draw])
 

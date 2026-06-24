@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import confetti from 'canvas-confetti'
+import { getPrizeImageSrc } from '@/lib/premiacion/prize-images'
 
 const STAR_DEFAULTS = {
   spread:        360,
@@ -48,7 +49,12 @@ export function ResultCard({ nombre, emoji, participante }: Props) {
     <main className="min-h-screen bg-[#0D0D12] flex flex-col items-center justify-center p-6 text-center">
       <div className="bg-[#16161E] border border-white/10 rounded-3xl p-10 w-full max-w-sm flex flex-col items-center gap-5 shadow-2xl">
 
-        <div className="text-8xl animate-bounce select-none">{emoji}</div>
+        {(() => {
+          const src = getPrizeImageSrc(nombre)
+          return src
+            ? <img src={src} alt={nombre} className="w-28 h-28 object-contain animate-bounce select-none" />
+            : <div className="text-8xl animate-bounce select-none">{emoji}</div>
+        })()}
 
         <div>
           {participante && (

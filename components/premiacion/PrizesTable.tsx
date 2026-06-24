@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { updateStock, deletePremio, updatePremio } from '@/lib/premiacion/actions'
 import type { Premio } from '@/lib/premiacion/types'
+import { getPrizeImageSrc } from '@/lib/premiacion/prize-images'
 
 interface Props { premios: Premio[] }
 
@@ -161,8 +162,13 @@ export function PrizesTable({ premios }: Props) {
             key={premio.id}
             className="bg-[#1E1E28] border border-white/5 rounded-xl px-4 py-3 flex items-center gap-3"
           >
-            {/* Emoji */}
-            <span className="text-2xl select-none shrink-0">{premio.emoji}</span>
+            {/* Ícono */}
+            {(() => {
+              const src = getPrizeImageSrc(premio.nombre)
+              return src
+                ? <img src={src} alt={premio.nombre} className="w-8 h-8 object-contain shrink-0" />
+                : <span className="text-2xl select-none shrink-0">{premio.emoji}</span>
+            })()}
 
             {/* Nombre + estado */}
             <div className="flex-1 min-w-0">
