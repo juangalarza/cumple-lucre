@@ -52,8 +52,8 @@ export function ResultCard({ nombre, emoji, participante }: Props) {
         {(() => {
           const src = getPrizeImageSrc(nombre)
           return src
-            ? <img src={src} alt={nombre} className="w-28 h-28 object-contain animate-bounce select-none" />
-            : <div className="text-8xl animate-bounce select-none">{emoji}</div>
+            ? <img src={src} alt={nombre} className="w-36 h-36 object-contain animate-bounce select-none" />
+            : <div className="animate-bounce select-none" style={{ fontSize: '9rem', lineHeight: 1 }}>{emoji}</div>
         })()}
 
         <div>

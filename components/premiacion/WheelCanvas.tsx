@@ -120,17 +120,18 @@ function renderWheel(
     // Ícono (imagen PNG o emoji de fallback)
     const imgSrc = getPrizeImageSrc(premios[i].nombre)
     const cachedImg = imgSrc ? imgCache.get(imgSrc) : undefined
+    const sz = (fontSize + 8) * 3
     if (cachedImg) {
-      const sz = fontSize + 8
       ctx.drawImage(cachedImg, -sz / 2, -lineH / 2 - sz / 2, sz, sz)
     } else {
-      ctx.font = `${fontSize + 1}px Inter, system-ui`
+      ctx.font = `${(fontSize + 1) * 3}px Inter, system-ui`
       ctx.fillText(premios[i].emoji, 0, -lineH / 2)
     }
 
-    // Nombre (más hacia el centro)
-    ctx.font = `bold ${fontSize}px Inter, system-ui`
-    ctx.fillText(nombre, 0, lineH / 2 + 1)
+    // Nombre: debajo del ícono si hay imagen, posición normal si hay emoji
+    const textY = cachedImg ? -lineH / 2 + sz / 2 + (fontSize + 4) + 2 : lineH / 2 + 1
+    ctx.font = `bold ${fontSize + 4}px Inter, system-ui`
+    ctx.fillText(nombre, 0, textY)
     ctx.restore()
   }
 
