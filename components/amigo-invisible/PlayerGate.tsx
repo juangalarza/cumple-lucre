@@ -116,29 +116,28 @@ export function PlayerGate({ token, miNombre, disponibles }: Props) {
           <p className="text-white/40 text-sm mt-1">Presioná el botón para descubrir a quién le regalás</p>
         </div>
 
-        {/* Pool disponible */}
-        {disponibles.length > 0 && (
-          <div className={`w-full transition-opacity duration-300 ${phase === 'spinning' ? 'opacity-30' : 'opacity-100'}`}>
-            <p className="text-white/30 text-xs uppercase tracking-widest text-center mb-3">
-              Participantes disponibles
-            </p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {disponibles.map(nombre => (
-                <span
-                  key={nombre}
-                  className="px-3 py-1.5 bg-[#1E1E28] border border-white/10 rounded-full text-white/70 text-sm"
-                >
-                  {nombre}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Display de nombre girando */}
+        {/* Display de nombre girando — blurred matrix */}
         {phase === 'spinning' && (
-          <div className="w-full bg-[#16161E] border border-[#C9A84C]/30 rounded-2xl py-8 flex items-center justify-center">
-            <span className="text-3xl font-bold text-[#C9A84C] transition-all duration-75 select-none">
+          <div className="w-full rounded-2xl py-8 flex items-center justify-center overflow-hidden"
+            style={{
+              background: '#0a120a',
+              border: '1px solid rgba(74,222,128,0.25)',
+              boxShadow: '0 0 18px rgba(74,222,128,0.12), inset 0 0 30px rgba(0,0,0,0.6)',
+            }}
+          >
+            <span
+              className="select-none text-3xl"
+              style={{
+                fontFamily: 'monospace',
+                color: '#4ade80',
+                filter: 'blur(9px)',
+                letterSpacing: '0.05em',
+                textShadow: '0 0 12px rgba(74,222,128,0.8)',
+                whiteSpace: 'nowrap',
+                maxWidth: '100%',
+                overflow: 'hidden',
+              }}
+            >
               {displayName}
             </span>
           </div>
