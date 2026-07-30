@@ -58,6 +58,12 @@ export function PlayerGate({ token, miNombre, disponibles }: Props) {
       if (intervalRef.current) clearInterval(intervalRef.current)
       if (!mountedRef.current) return
 
+      if (!result.ok) {
+        setPhase('idle')
+        setError(result.error)
+        return
+      }
+
       // Desaceleración: mostrar nombres aleatoriamente cada vez más lento
       const delays = [140, 180, 230, 290, 360]
       for (const d of delays) {

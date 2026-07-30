@@ -47,38 +47,48 @@ export async function estadoJuego(token: string): Promise<EstadoJuego> {
   }
 }
 
-export async function revelarAsignacion(token: string): Promise<{ nombre: string; primeraVez: boolean }> {
-  const admin = createAdminClient()
+type RevelarResult =
+  | { ok: true; nombre: string; primeraVez: boolean }
+  | { ok: false; error: string }
 
-  // Atómico: solo la PRIMERA llamada flipea revelado_at
-  const { data: primerReveal } = await admin
-    .from('amigo_invisible_jugadores')
-    .update({ revelado_at: new Date().toISOString() })
-    .eq('token', token)
-    .is('revelado_at', null)
-    .select('asignado_a')
-    .maybeSingle()
+export async function revelarAsignacion(token: string): Promise<RevelarResult> {
+  try {
+    const admin = createAdminClient()
 
-  let asignadoId = primerReveal?.asignado_a ?? null
-  const primeraVez = !!primerReveal
-
-  if (!primeraVez) {
-    const { data: existente } = await admin
+    // Atómico: solo la PRIMERA llamada flipea revelado_at
+    const { data: primerReveal } = await admin
       .from('amigo_invisible_jugadores')
-      .select('asignado_a')
+      .update({ revelado_at: new Date().toISOString() })
       .eq('token', token)
+      .is('revelado_at', null)
+      .select('asignado_a')
       .maybeSingle()
-    if (!existente) throw new Error('Link inválido.')
-    asignadoId = existente.asignado_a
+
+    let asignadoId = primerReveal?.asignado_a ?? null
+    const primeraVez = !!primerReveal
+
+    if (!primeraVez) {
+      const { data: existente } = await admin
+        .from('amigo_invisible_jugadores')
+        .select('asignado_a')
+        .eq('token', token)
+        .maybeSingle()
+      if (!existente) return { ok: false, error: 'Link inválido.' }
+      asignadoId = existente.asignado_a
+    }
+
+    if (!asignadoId) return { ok: false, error: 'El sorteo todavía no se realizó.' }
+
+    const { data: target } = await admin
+      .from('amigo_invisible_jugadores')
+      .select('nombre')
+      .eq('id', asignadoId)
+      .single()
+
+    if (!target) return { ok: false, error: 'Error al obtener la asignación.' }
+
+    return { ok: true, nombre: target.nombre, primeraVez }
+  } catch {
+    return { ok: false, error: 'Error inesperado. Intentá de nuevo.' }
   }
-
-  if (!asignadoId) throw new Error('El sorteo todavía no se realizó.')
-
-  const { data: target } = await admin
-    .from('amigo_invisible_jugadores')
-    .select('nombre')
-    .eq('id', asignadoId)
-    .single()
-
-  return { nombre: target!.nombre, primeraVez }
 }
