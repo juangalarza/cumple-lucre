@@ -113,7 +113,7 @@ export function PlayerGate({ token, miNombre, disponibles }: Props) {
         <div className="text-center">
           <div className="text-5xl mb-3 select-none">🎁</div>
           <h1 className="text-2xl font-bold text-white">¡Hola, {miNombre}!</h1>
-          <p className="text-white/40 text-sm mt-1">Presioná "Jugar" para descubrir a quién le regalás</p>
+          <p className="text-white/40 text-sm mt-1">Presioná el botón para descubrir a quién le regalás</p>
         </div>
 
         {/* Pool disponible */}
