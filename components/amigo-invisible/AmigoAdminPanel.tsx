@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   agregarJugador,
   eliminarJugador,
@@ -40,6 +41,7 @@ function IconWhatsApp({ className }: { className?: string }) {
 }
 
 export function AmigoAdminPanel({ initialJugadores, config }: Props) {
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [inputNombre, setInputNombre] = useState('')
   const [inputTelefono, setInputTelefono] = useState('')
@@ -49,8 +51,24 @@ export function AmigoAdminPanel({ initialJugadores, config }: Props) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [mostrarAsignaciones, setMostrarAsignaciones] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
 
   const sorteado = config.estado === 'sorteado'
+
+  // Auto-refresh cada 15s cuando el sorteo está activo
+  useEffect(() => {
+    if (!sorteado) return
+    const id = setInterval(() => {
+      router.refresh()
+      setLastRefresh(new Date())
+    }, 15000)
+    return () => clearInterval(id)
+  }, [sorteado, router])
+
+  function handleRefresh() {
+    router.refresh()
+    setLastRefresh(new Date())
+  }
 
   function getLink(token: string) {
     return `${window.location.origin}/amigo/${token}`
@@ -137,16 +155,29 @@ export function AmigoAdminPanel({ initialJugadores, config }: Props) {
             <h1 className="text-xl font-bold text-white">🎁 Amigo Invisible</h1>
             <p className="text-white/40 text-sm mt-0.5">
               {initialJugadores.length} jugador{initialJugadores.length !== 1 ? 'es' : ''}
-              {sorteado && ` · ${revelados}/${initialJugadores.length} revelados`}
+              {sorteado && ` · ${revelados}/${initialJugadores.length} jugaron`}
             </p>
           </div>
-          <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-            sorteado
-              ? 'bg-green-500/10 text-green-400'
-              : 'bg-amber-500/10 text-amber-400'
-          }`}>
-            {sorteado ? 'Sorteado' : 'Abierto'}
-          </span>
+          <div className="flex items-center gap-2">
+            {sorteado && (
+              <button
+                onClick={handleRefresh}
+                title={`Última actualización: ${lastRefresh.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`}
+                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-white/30 hover:text-white flex items-center justify-center transition-colors"
+              >
+                <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13.5 8A5.5 5.5 0 1 1 8 2.5a5.48 5.48 0 0 1 3.9 1.6M13.5 2.5v3h-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            )}
+            <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+              sorteado
+                ? 'bg-green-500/10 text-green-400'
+                : 'bg-amber-500/10 text-amber-400'
+            }`}>
+              {sorteado ? 'Sorteado' : 'Abierto'}
+            </span>
+          </div>
         </div>
 
         {/* Error */}
@@ -207,20 +238,24 @@ export function AmigoAdminPanel({ initialJugadores, config }: Props) {
 
                     {/* Nombre + estado */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-medium truncate">{j.nombre}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-white text-sm font-medium truncate">{j.nombre}</p>
+                        {sorteado && (
+                          <span className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                            j.revelado_at
+                              ? 'bg-green-500/15 text-green-400'
+                              : 'bg-white/5 text-white/25'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${j.revelado_at ? 'bg-green-400' : 'bg-white/20'}`} />
+                            {j.revelado_at ? 'Jugó' : 'Pendiente'}
+                          </span>
+                        )}
+                      </div>
                       {j.telefono && (
                         <p className="text-white/25 text-xs truncate">{j.telefono}</p>
                       )}
-                      {sorteado && (
-                        <p className="text-xs mt-0.5">
-                          {j.revelado_at
-                            ? <span className="text-green-400">Ya reveló</span>
-                            : <span className="text-white/30">Pendiente</span>
-                          }
-                          {mostrarAsignaciones && j.asignado_nombre && (
-                            <span className="text-[#C9A84C] ml-2">→ {j.asignado_nombre}</span>
-                          )}
-                        </p>
+                      {sorteado && mostrarAsignaciones && j.asignado_nombre && (
+                        <p className="text-[#C9A84C] text-xs mt-0.5">→ {j.asignado_nombre}</p>
                       )}
                     </div>
 
