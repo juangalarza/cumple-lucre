@@ -1,6 +1,7 @@
 export interface Jugador {
   id: string
   nombre: string
+  telefono: string | null
   token: string
   asignado_a: string | null
   asignado_nombre: string | null

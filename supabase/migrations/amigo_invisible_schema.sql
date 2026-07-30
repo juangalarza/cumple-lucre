@@ -3,11 +3,16 @@
 create table if not exists public.amigo_invisible_jugadores (
   id          uuid primary key default gen_random_uuid(),
   nombre      text not null,
+  telefono    text,
   token       text not null unique,
   asignado_a  uuid references public.amigo_invisible_jugadores(id),
   revelado_at timestamptz,
   created_at  timestamptz not null default now()
 );
+
+-- Si la tabla ya existía, agregar la columna:
+alter table public.amigo_invisible_jugadores
+  add column if not exists telefono text;
 
 create table if not exists public.amigo_invisible_config (
   id     int  primary key default 1,

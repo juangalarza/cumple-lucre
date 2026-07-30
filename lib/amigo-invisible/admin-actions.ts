@@ -13,7 +13,7 @@ export async function getJugadores(): Promise<Jugador[]> {
   const admin = createAdminClient()
   const { data, error } = await admin
     .from('amigo_invisible_jugadores')
-    .select('id, nombre, token, asignado_a, revelado_at, created_at')
+    .select('id, nombre, telefono, token, asignado_a, revelado_at, created_at')
     .order('created_at', { ascending: true })
   if (error) throw new Error(error.message)
 
@@ -36,7 +36,7 @@ export async function getConfig(): Promise<Config> {
   return (data as Config) ?? { estado: 'abierto', titulo: null }
 }
 
-export async function agregarJugador(nombre: string): Promise<void> {
+export async function agregarJugador(nombre: string, telefono?: string): Promise<void> {
   const admin = createAdminClient()
   const { data: cfg } = await admin
     .from('amigo_invisible_config').select('estado').eq('id', 1).single()
@@ -45,7 +45,11 @@ export async function agregarJugador(nombre: string): Promise<void> {
 
   const { error } = await admin
     .from('amigo_invisible_jugadores')
-    .insert({ nombre: nombre.trim(), token: genToken() })
+    .insert({
+      nombre: nombre.trim(),
+      token: genToken(),
+      telefono: telefono?.trim() || null,
+    })
   if (error) throw new Error(error.message)
   revalidatePath('/admin/amigo')
 }

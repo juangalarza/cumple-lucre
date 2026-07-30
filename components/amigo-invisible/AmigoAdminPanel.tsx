@@ -41,7 +41,8 @@ function IconWhatsApp({ className }: { className?: string }) {
 
 export function AmigoAdminPanel({ initialJugadores, config }: Props) {
   const [isPending, startTransition] = useTransition()
-  const [inputValue, setInputValue] = useState('')
+  const [inputNombre, setInputNombre] = useState('')
+  const [inputTelefono, setInputTelefono] = useState('')
   const [confirmSorteo, setConfirmSorteo] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -61,21 +62,26 @@ export function AmigoAdminPanel({ initialJugadores, config }: Props) {
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  function shareWhatsApp(nombre: string, token: string) {
+  function shareWhatsApp(nombre: string, token: string, telefono: string | null) {
     const link = getLink(token)
-    const mensaje = `🎁 *Amigo Invisible — Cumple de Lucre*\n¡Hola ${nombre}! Entrá a tu link secreto para descubrir a quién le regalás:\n${link}`
-    window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank')
+    const mensaje = `🎁 *Amigo Invisible — Finda Digital*\n¡Hola ${nombre}! Entrá a tu link secreto para descubrir a quién le regalás:\n${link}`
+    const numero = telefono ? telefono.replace(/\D/g, '') : ''
+    const url = numero
+      ? `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`
+      : `https://wa.me/?text=${encodeURIComponent(mensaje)}`
+    window.open(url, '_blank')
   }
 
   function handleAgregar(e: React.FormEvent) {
     e.preventDefault()
-    const nombre = inputValue.trim()
+    const nombre = inputNombre.trim()
     if (!nombre) return
     setError(null)
     startTransition(async () => {
       try {
-        await agregarJugador(nombre)
-        setInputValue('')
+        await agregarJugador(nombre, inputTelefono)
+        setInputNombre('')
+        setInputTelefono('')
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al agregar jugador')
       }
@@ -152,22 +158,32 @@ export function AmigoAdminPanel({ initialJugadores, config }: Props) {
 
         {/* Formulario agregar (solo si abierto) */}
         {!sorteado && (
-          <form onSubmit={handleAgregar} className="flex gap-2">
+          <form onSubmit={handleAgregar} className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <input
+                value={inputNombre}
+                onChange={e => setInputNombre(e.target.value)}
+                placeholder="Nombre del jugador"
+                maxLength={40}
+                disabled={isPending}
+                className="flex-1 bg-[#1E1E28] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-[#C9A84C] transition-colors disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={isPending || !inputNombre.trim()}
+                className="px-5 py-3 bg-[#1A3A6B] hover:bg-[#274d8a] border-2 border-[#C9A84C] text-white text-sm font-semibold rounded-xl disabled:opacity-40 transition-colors shrink-0"
+              >
+                Agregar
+              </button>
+            </div>
             <input
-              value={inputValue}
-              onChange={e => setInputValue(e.target.value)}
-              placeholder="Nombre del jugador"
-              maxLength={40}
+              value={inputTelefono}
+              onChange={e => setInputTelefono(e.target.value)}
+              placeholder="Teléfono (ej: 5491112345678) — opcional"
+              maxLength={20}
               disabled={isPending}
-              className="flex-1 bg-[#1E1E28] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-[#C9A84C] transition-colors disabled:opacity-50"
+              className="w-full bg-[#1E1E28] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-[#C9A84C] transition-colors disabled:opacity-50"
             />
-            <button
-              type="submit"
-              disabled={isPending || !inputValue.trim()}
-              className="px-5 py-3 bg-[#1A3A6B] hover:bg-[#274d8a] border-2 border-[#C9A84C] text-white text-sm font-semibold rounded-xl disabled:opacity-40 transition-colors"
-            >
-              Agregar
-            </button>
           </form>
         )}
 
@@ -192,6 +208,9 @@ export function AmigoAdminPanel({ initialJugadores, config }: Props) {
                     {/* Nombre + estado */}
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm font-medium truncate">{j.nombre}</p>
+                      {j.telefono && (
+                        <p className="text-white/25 text-xs truncate">{j.telefono}</p>
+                      )}
                       {sorteado && (
                         <p className="text-xs mt-0.5">
                           {j.revelado_at
@@ -236,9 +255,9 @@ export function AmigoAdminPanel({ initialJugadores, config }: Props) {
                           }
                         </button>
                         <button
-                          onClick={() => shareWhatsApp(j.nombre, j.token)}
+                          onClick={() => shareWhatsApp(j.nombre, j.token, j.telefono)}
                           disabled={isPending}
-                          title="Compartir por WhatsApp"
+                          title={j.telefono ? `WhatsApp a ${j.telefono}` : 'Compartir por WhatsApp'}
                           className="w-8 h-8 rounded-lg bg-white/5 hover:bg-green-500/20 text-white/40 hover:text-green-400 flex items-center justify-center transition-colors disabled:opacity-20"
                         >
                           <IconWhatsApp className="w-3.5 h-3.5" />
