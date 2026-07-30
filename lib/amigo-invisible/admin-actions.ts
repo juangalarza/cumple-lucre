@@ -96,9 +96,10 @@ export async function realizarSorteo(): Promise<void> {
     if (error) throw new Error(error.message)
   }
 
-  await admin
+  const { error: cfgError } = await admin
     .from('amigo_invisible_config')
-    .update({ estado: 'sorteado' }).eq('id', 1)
+    .upsert({ id: 1, estado: 'sorteado' }, { onConflict: 'id' })
+  if (cfgError) throw new Error(cfgError.message)
 
   revalidatePath('/admin/amigo')
 }
@@ -111,6 +112,6 @@ export async function resetearSorteo(): Promise<void> {
     .neq('id', '00000000-0000-0000-0000-000000000000')
   await admin
     .from('amigo_invisible_config')
-    .update({ estado: 'abierto' }).eq('id', 1)
+    .upsert({ id: 1, estado: 'abierto' }, { onConflict: 'id' })
   revalidatePath('/admin/amigo')
 }
